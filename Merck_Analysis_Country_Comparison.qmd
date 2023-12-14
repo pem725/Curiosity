@@ -1,0 +1,108 @@
+---
+title: "Merck Curiosity Paper - Country Comparison Results"
+author: "Kashdan and McKnight"
+format: html
+---
+
+## Data
+
+We got this data directly from Merck in a password protected xlsx file (Merck Curiosity Survey_Data_PWD.xlsx).  The mdsum hash is:
+
+```{r}
+#| echo: false
+#| results: hide
+#| warning: false
+#| message: false
+#| error: false
+#| cache: false
+#| fig.cap: "md5 hash of the data"
+
+
+# read a xlsx file with a password and save to a data frame
+#library(xlsx)
+#library(digest)
+
+
+# run the following code if a file does not exist in the current directory
+# if (!file.exists("Merck_Curiosity_Survey_Data_NO_PWD.csv")) {
+#   # read a xlsx file with a password and save to a data frame
+#   df <- xlsx::read.xlsx("Merck_Curiosity_Survey_Data_PWD.xlsx", sheetIndex = 1, password = "*dke5!rUUnyz2&L")
+#   # remove the first row (variable names)
+#   df.fin <- df[-1,]
+#   # save the variable names
+#   df.varnames <- df[1,]
+#   
+#   # convert columns 2 through 17 from chr to numeric
+#   df.fin[,2:17] <- sapply(df.fin[,2:17], as.numeric)
+#   df.fin[,18:38] <- sapply(df.fin[,18:38], as.numeric)
+#   
+#   df.fin$Locale <- as.factor(df.fin$Country.of.Subsidiary)
+#   
+#   # save df.fin to a csv file
+#   write.csv(df.fin, file = "Merck_Curiosity_Survey_Data_NO_PWD.csv", row.names = FALSE)
+#   
+#   # save df.varnames to a csv file
+  # write.csv(as.data.frame(t(df.varnames)),
+  #            file="Merck_Curiosity_Survey_Data_NO_PWD_varnames.csv",
+  #            row.names = FALSE)
+# }
+
+# # read a xlsx file with a password and save to a data frame
+# df <- xlsx::read.xlsx("Merck Curiosity Survey_Data_PWD.xlsx", sheetIndex = 1, password = "*dke5!rUUnyz2&L")
+# # remove the first row (variable names)
+# df.fin <- df[-1,]
+# # save the variable names
+# df.varnames <- df[1,]
+# 
+# # convert columns 2 through 17 from chr to numeric
+# df.fin[,2:17] <- sapply(df.fin[,2:17], as.numeric)
+# df.fin[,18:38] <- sapply(df.fin[,18:38], as.numeric)
+# 
+# df.fin$Locale <- as.factor(df.fin$Country.of.Subsidiary)
+# 
+# # save df.fin to a csv file
+# write.csv(df.fin, file = "Merck Curiosity Survey_Data_NO_PWD.csv", row.names = FALSE)
+
+df.fin <- read.csv("Merck_Curiosity_Survey_Data_NO_PWD.csv", header = TRUE)
+
+# read the variable names
+df.varnames <- read.csv("Merck_Curiosity_Survey_Data_NO_PWD_varnames.csv", header = TRUE)
+# print df.varnames with row.names
+print(df.varnames, row.names = T)
+
+# get the md5 hash of the data frame
+#md5 <- digest(df, algo = "md5")
+# print the md5 hash
+#print(md5)
+
+```
+
+## Checking the data integrity
+
+The original file 
+
+md5sum 7734c8a6659f0460653bd52b85c456cf  Merck Curiosity Survey_Data_PWD.xlsx
+
+
+
+## Data Description
+
+
+
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this 
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
