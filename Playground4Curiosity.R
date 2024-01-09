@@ -1,24 +1,52 @@
 # Playground for Curiosity
 
+# Install and load the lavaan package if not already installed
+if (!requireNamespace("lavaan", quietly = TRUE)) {
+  install.packages("lavaan")
+}
+
+# Install and load the tidyverse package if not already installed
+if (!requireNamespace("tidyverse", quietly = TRUE)) {
+  install.packages("tidyverse")
+}
+
+# Load the tidyverse package
+library(tidyverse)
+library(lavaan)
+
 ## PEM - I'm just going to code here.  When shit works, I will port it over to
 ## the Quarto file.  That file is driving me nuts.
 
-df.fin <- read.csv("Merck_Curiosity_Survey_Data_NO_PWD.csv", header = TRUE)
+df <- read.csv("Merck_Curiosity_Survey_Data_NO_PWD.csv", header = TRUE)
 
 ### Varnames
 # read the variable names
 df.varnames <- read.csv("Merck_Curiosity_Survey_Data_NO_PWD_varnames.csv", header = TRUE)
 # print df.varnames with row.names
 names(df.varnames) <- c("shortName","longName")
-factor.names <- data.frame(shortName = c("ds","je","st","op"), longName = c("Deprivation Sensitivity", "Joyous Exploration", "Stress Tolerance", "Openness to People's Ideas"))
+factor.names <- data.frame(shortName = c("ds","je","st","op"), 
+                           longName = c("Deprivation Sensitivity", 
+                                        "Joyous Exploration", 
+                                        "Stress Tolerance", 
+                                        "Openness to People's Ideas"))
 df.varnames <- rbind(df.varnames,factor.names)
+
+## select only Locale levels with sufficient data N > 200
+df.fin <- df %>%
+  group_by(Locale) %>%
+  filter(n() > 200) %>%
+  ungroup()
+
+table(df.fin$Locale.f)
+
+
+
 
 ### Locale
 Locale.dat <- data.frame(group=1:10, location = unique(df.fin$Locale))
-
 df.fin$Locale.f <- as.factor(df.fin$Locale)
-## select only Locale levels with sufficient data
-df.fin <- df.fin[df.fin$Locale %in% names(table(df.fin$Locale.f)[table(df.fin$Locale.f) > 200]),]
+df.fin$Locale.f
+
 
 library(lavaan)
 
@@ -186,6 +214,9 @@ summary(fit.weak.new)
 fitmeasures(fit.weak.new)
 summary(fit.weak.new, fit.measures=TRUE)
 summary(fit.weak.new, fit.measures=F)
+
+lavTestScore(fit.configural.new, fit.weak.new)
+
 
 inspect(fit.configural.new, "mean.lv", digits = 3)
 inspect(fit.configural.new, "std.lv", digits = 3)
