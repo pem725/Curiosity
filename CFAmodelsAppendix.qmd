@@ -1,0 +1,232 @@
+---
+title: "CFA Models As Appendix"
+format: html
+---
+
+# Setup libraries
+
+```{r setup}
+#| echo: true
+#| include: true
+#| message: false
+#| warning: false
+#| error: true
+library(tidyverse)
+library(lavaan)
+library(lavaanPlot)
+library(psych)
+library(GPArotation)
+```
+
+::: callout-important
+The libraries likely need to be updated and run just before we submit to ensure no changes. Once submitted, we freeze the versions and report.  Please see the `sessionInfo()` section below.
+:::
+
+# Data {#data}
+
+The Merck data came with a password.  Please contact the authors for access to the data.  NOTE:  The data is not included in the repo.
+
+
+```{r data}
+#| echo: true
+#| messages: false
+#| errors: false
+#| warnings: false
+df <- read.csv("Merck_Curiosity_Survey_Data_NO_PWD.csv", header = TRUE)
+
+df.varnames <- read.csv("Merck_Curiosity_Survey_Data_NO_PWD_varnames.csv", header = TRUE)
+
+names(df.varnames) <- c("shortName","longName")
+factor.names <- data.frame(shortName = c("ds","je","st","op"), 
+                           longName = c("Deprivation Sensitivity", 
+                                        "Joyous Exploration", 
+                                        "Stress Tolerance", 
+                                        "Openness to People's Ideas"))
+df.varnames <- rbind(df.varnames,factor.names)
+#str(df)
+
+df.fin <- df %>%
+  group_by(Locale) %>%
+  filter(n() > 200) %>%
+  ungroup()
+#str(df.fin)
+
+#table(df.fin$Locale.f)
+
+### Locale
+Locale.dat <- data.frame(group=1:10, location = unique(df.fin$Locale))
+df.fin$Locale.f <- as.factor(df.fin$Locale)
+#df.fin$Locale.f
+knitr::kable(head(df.fin))
+
+```
+
+## Descriptives
+
+```{r descriptives}
+#| echo: true
+#| messages: false
+#| errors: false
+#| warnings: false
+
+knitr::kable(as.data.frame(table(df.fin$Locale.f)))
+knitr::kable(as.data.frame(table(df.fin$Age.Group)))
+```
+
+## Items
+
+```{r items}
+#| echo: true
+#| messages: false
+#| errors: false
+#| warnings: false
+#| include: true
+
+
+
+knitr::kable(df.varnames)
+```
+
+
+# CFA Models
+
+## Configural Equivalence Models
+
+We tested two different models based upon the results.  First, we ran our 4 factor with 4 items each model in a CFA.  
+
+
+
+```{r configural}
+#| echo: true
+#| messages: false
+#| errors: false
+#| warnings: false
+
+# previously published model
+Cur.model <- 'ds =~ Q1 + Q2 + Q3 + Q4
+              je =~ Q5 + Q6 + Q7 + Q8
+              st =~ Q9 + Q10 + Q11 + Q12
+              op =~ Q13 + Q14 + Q15 + Q16'
+
+# new model based upon item analysis and empirical results (more efficient)
+New.model <- 'ds =~ Q1 + Q3 + Q4
+              je =~ Q6 + Q7 + Q8
+              st =~ Q10 + Q11 + Q12
+              op =~ Q13 + Q14 + Q15'
+
+# fit the current model but only ask for configural equivalence
+fit.config.cur <- cfa(Cur.model, data = df.fin, group="Locale")
+
+# summarize current configural model with standardized estimates
+#summary(fit.config.cur, fit.measures = T, standardized = T)
+
+# fit the new model but only ask for configural equivalence
+fit.config.new <- cfa(New.model, data=df.fin, group="Locale")
+
+# summarize new configural model with standardized estimates
+#summary(fit.config.new, fit.measures = T, standardized = T)
+```
+
+## Weak Constraints Model
+
+```{r weak}
+#| echo: true
+#| messages: false
+#| errors: false
+#| warnings: false
+#| include: true
+
+# fit the current model but only ask for weak equivalence of loadings
+fit.weak.cur <- cfa(Cur.model, data = df.fin, group="Locale", group.equal=c("loadings"))
+
+# summarize current weak model with standardized estimates
+#summary(fit.weak.cur, fit.measures = T, standardized = T)
+
+# fit the new model but only ask for weak equivalence of loadings
+fit.config.new <- cfa(New.model, data=df.fin, group="Locale", group.equal=c("loadings"))
+
+# summarize new configural model with standardized estimates
+#summary(fit.config.new, fit.measures = T, standardized = T)
+
+```
+
+## Scalar Model
+
+```{r scalar}
+#| echo: true
+#| messages: false
+#| errors: false
+#| warnings: false
+#| include: true
+
+# fit the current model but only ask for scalar equivalence
+fit.scalar.cur <- cfa(Cur.model, data = df.fin, group="Locale", group.equal=c("loadings","intercepts"))
+
+# summarize current scalar model with standardized estimates
+#summary(fit.scalar.cur, fit.measures = T, standardized = T)
+
+# fit the new model but only ask for scalar equivalence
+fit.scalar.new <- cfa(New.model, data=df.fin, group="Locale", group.equal=c("loadings","intercepts"))
+
+# summarize new scalar model with standardized estimates
+#summary(fit.scalar.new, fit.measures = T, standardized = T)
+```
+
+## Nested Model Comparisons
+
+### Compare within models
+
+```{r nested1}
+#| echo: true
+#| messages: false
+#| errors: false
+#| warnings: false
+#| include: true
+
+# compare configural and weak models
+lavTestLRT(fit.config.cur, fit.weak.cur)
+
+```
+
+# EFA models
+
+## EFA Model 1
+
+```{r efa1}
+#| echo: true
+#| messages: false
+#| errors: false
+#| warnings: false
+efa1 <- fa(df.fin[,c(3:18)], nfactors = 4, rotate = "varimax", fm = "pa")
+efa1
+
+```
+
+## EFA Model 2
+
+```{r efa2}
+#| echo: true
+#| messages: false
+#| errors: false
+#| warnings: false
+
+efa2 <- fa(df.fin[,c(3:18)], nfactors = 4, rotate = "oblimin", fm = "pa")
+efa2
+
+```
+
+
+
+
+# Session Information {#session}
+
+```{r session}
+#| echo: true
+#| messages: false
+#| errors: false
+#| warnings: false
+
+sessionInfo()
+
+
+```

@@ -13,7 +13,7 @@ if (!requireNamespace("tidyverse", quietly = TRUE)) {
 # Load the tidyverse package
 library(tidyverse)
 library(lavaan)
-
+library(psych)
 ## PEM - I'm just going to code here.  When shit works, I will port it over to
 ## the Quarto file.  That file is driving me nuts.
 
@@ -36,6 +36,7 @@ df.fin <- df %>%
   group_by(Locale) %>%
   filter(n() > 200) %>%
   ungroup()
+str(df.fin)
 
 table(df.fin$Locale.f)
 
@@ -186,7 +187,8 @@ write_sheet(byAge.cfa,
 
 ## local model
 library(lavaanPlot)
-lavaanPlot2(fit.weak)
+
+lavaanPlot(fit.weak)
 
 
 ## New Day, New Model
@@ -220,11 +222,14 @@ lavTestScore(fit.configural.new, fit.weak.new)
 
 inspect(fit.configural.new, "mean.lv", digits = 3)
 inspect(fit.configural.new, "std.lv", digits = 3)
-
 inspect(fit.configural.new, "est", digits = 3)
 
 res.ModInds.new <- inspect(fit.weak.new, "modindices", digits = 3)
 summary(res.ModInds.new)
+
+# plot the loadings by locale for fit.weak.new model by tidyverse and ggplot
+inspect(fit.weak.new, "std.lv", digits=3)
+
 
 # select the top 5 largest modification indices by group in tidyverse
 
@@ -244,7 +249,7 @@ write.csv(topMIs.new, file = "topMIs.new.csv", row.names = FALSE)
 str(topMIs.new)
 
 ## EFA models for NEW model
-
+library(GPArotation)
 new.vars <- c("Q1","Q3","Q4","Q6","Q7","Q8","Q10","Q11","Q12","Q13","Q14","Q15")
 
 efa1.new <- df.fin[,new.vars] %>% 
@@ -254,8 +259,7 @@ summary(efa1.new)
 efa1.new$loadings
 
 efa2.new <- psych::omega(df.fin[complete.cases(df.fin[,new.vars]),new.vars], nfactors = 4, poly=T, scores = "regression")
-summary(efa2.new)
-
+str(efa2.new)
 
 fa.diagram(efa1, simple=F, digits = 2, cut = 0.3, sort=T, main = "EFA (PAF) All Groups Combined")
 
@@ -263,4 +267,3 @@ anova(efa2, efa2.new)
 summary(efa2)
 summary(efa2.new)
 
-efa2
