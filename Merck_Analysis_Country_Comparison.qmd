@@ -1,0 +1,185 @@
+---
+title: "Merck Curiosity Paper - Country Comparison Results"
+author: "Patrick E. McKnight and Todd B. Kashdan"
+format: 
+  html:
+    toc: true
+    toc-location: left
+    toc_depth: 3
+    html-math-method: katex
+
+theme: cosmo 
+---
+
+<!--- Hello source code reader!  This is a quarto file.  It is a markdown file with embedded R code.  The R code is executed and the results are displayed in the document.  The R code is executed in the order in which it appears in the document.  Come peruse the code and the results.  If you have any questions, please contact Patrick McKnight via email (gmu is fine).  Thanks for your interest in our work.  -->
+
+# Merck Curiosity Paper - Country Comparison Results
+
+
+```{r load libraries, include=FALSE}
+#| echo: false
+#| results: hide
+#| warning: false
+#| message: false
+#| error: true
+#| cache: true
+
+# load all libraries here
+library(tidyverse)
+library(lavaan)
+library(psych)
+library(semPlot)
+library(GPArotation)
+library(ggcorrplot)
+library(knitr)
+library(kableExtra)
+library(apaTables)
+library(xlsx)
+library(digest)
+
+```
+
+
+
+# Data Source
+
+Data delivered directly from Merck in a password protected MS Excel (xlsx) file (Merck Curiosity Survey_Data_PWD.xlsx). The mdsum hash of the original xlsx file:
+
+```{r}
+cat("md5sum 7734c8a6659f0460653bd52b85c456cf Merck Curiosity Survey_Data_PWD.xlsx")
+```
+
+The original xlsx file was converted to a csv file (Merck_Curiosity_Survey_Data_NO_PWD.csv) using the following R code:
+
+```{r convert xlsx to csv, include=FALSE}
+#| echo: false
+#| results: hide
+#| warning: false
+#| message: false
+#| error: false
+#| cache: true
+#| fig.cap: "md5 hash of the data"
+
+# read a xlsx file with a password and save to a data frame
+library(xlsx)
+library(digest)
+
+# run the following code if a file does not exist in the current directory
+if (!file.exists("Merck_Curiosity_Survey_Data_NO_PWD.csv")) { # convert xlsx to csv BEGIN
+  # read a xlsx file with a password and save to a data frame
+  df <- xlsx::read.xlsx("Merck_Curiosity_Survey_Data_PWD.xlsx", 
+                        sheetIndex = 1, 
+                        password = "*dke5!rUUnyz2&L")
+  # remove the first row (variable names)
+  df.fin <- df[-1,]
+  # save the variable names
+  df.varnames <- df[1,]
+   
+  # convert columns 2 through 17 from chr to numeric
+  df.fin[,2:17] <- sapply(df.fin[,2:17], as.numeric)
+  df.fin[,18:38] <- sapply(df.fin[,18:38], as.numeric)
+   
+  df.fin$Locale <- as.factor(df.fin$Country.of.Subsidiary)
+   
+  # save df.fin to a csv file
+  write.csv(df.fin, file = "Merck_Curiosity_Survey_Data_NO_PWD.csv", row.names = FALSE)
+   
+  # save df.varnames to a csv file
+  write.csv(as.data.frame(t(df.varnames)),
+             file="Merck_Curiosity_Survey_Data_NO_PWD_varnames.csv",
+             row.names = TRUE)
+} # convert xlsx to csv END
+
+df.fin <- read.csv("Merck_Curiosity_Survey_Data_NO_PWD.csv", header = TRUE)
+
+# read the variable names
+df.varnames <- read.csv("Merck_Curiosity_Survey_Data_NO_PWD_varnames.csv", header = TRUE)
+# print df.varnames with row.names
+df.varnames
+
+# get the md5 hash of the data frame
+#md5 <- digest(df, algo = "md5")
+# print the md5 hash
+#print(md5)
+
+```
+
+## Checking the data integrity
+
+The original file
+
+md5sum 7734c8a6659f0460653bd52b85c456cf Merck Curiosity Survey_Data_PWD.xlsx
+
+## Data Description
+
+```{r}
+#| echo: false
+#| results: hide
+#| warning: false
+#| message: false
+#| error: false
+#| cache: true
+
+# print the data frame
+df.fin
+
+# print the variable names
+names(df.fin)
+```
+
+## Descriptive Statistics
+
+```{r}
+#| echo: false
+#| 
+
+# descriptive statistics
+library(psych)
+describe(df.fin)
+
+# descriptive statistics by country
+library(psych)
+describeBy(df.fin, group = df.fin$Locale)
+
+```
+
+
+# Data Analysis
+
+## Data Analysis Plan
+
+The data analysis plan was developed by Patrick E. McKnight and Todd B. Kashdan. The data analysis plan was reviewed and approved by Merck prior to data analysis.
+
+## Data Analysis
+
+```{r}
+#| echo: false
+
+# load the data
+df.fin <- read.csv("Merck_Curiosity_Survey_Data_NO_PWD.csv", header = TRUE)
+
+# load the variable names
+df.varnames <- read.csv("Merck_Curiosity_Survey_Data_NO_PWD_varnames.csv", header = TRUE)
+
+# load the packages
+library(psych)
+library(ggplot2)
+library(ggpubr)
+library(ggthemes)
+library(ggcorrplot)
+library(gridExtra)
+library(grid)
+library(reshape2)
+library(dplyr)
+library(corrplot)
+library(Hmisc)
+library(ggcorrplot)
+library(ggExtra)
+library(ggpubr)
+
+# convert the Locale variable to a factor
+df.fin$Locale <- as.factor(df.fin$Locale)
+
+
+```
+
