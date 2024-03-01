@@ -51,6 +51,9 @@ library(ggfortify)
 library(corrplot)
 library(FactoMineR)
 library(factoextra)
+library(tidySEM)
+library(DiagrammeRsvg)
+library(rsvg)
 ```
 
 :::{.callout-tip}
@@ -647,13 +650,13 @@ kable(lavTestLRT(fit.conf.sex.new,
 #| errors: false
 #| warnings: false
 #| include: true
-#| cache: true
+#| cache: false
 bySex.cfa.cur <- as.data.frame(round(cbind(fitmeasures(fit.conf.sex.cur),
                                            fitmeasures(fit.weak.sex.cur),
-                                           fitmeasures(fit.strong.sex.cur)),3))
+                                        fitmeasures(fit.strong.sex.cur)),3))
 bySex.cfa.new <- as.data.frame(round(cbind(fitmeasures(fit.conf.sex.new),
                                            fitmeasures(fit.weak.sex.new),
-                                           fitmeasures(fit.strong.sex.new)),3))
+                                        fitmeasures(fit.strong.sex.new)),3))
 names(bySex.cfa.cur) <- c("configural","weak","strong")
 names(bySex.cfa.new) <- c("configural","weak","strong")
 kable(bySex.cfa.cur)
@@ -663,6 +666,13 @@ kable(bySex.cfa.new)
 ### Average Standardized Factor Load
 
 ```{r cfaSummarySexLoadings}
+#| echo: true
+#| messages: false
+#| errors: false
+#| warnings: false
+#| include: true
+#| cache: false
+
 tidy(fit.strong.sex.new) %>%
   filter(str_detect(op, "=~")) %>%
   group_by(term) %>%
@@ -677,17 +687,16 @@ sexLoadings <- tidy(fit.strong.sex.new) %>%
   summarize(BetaMean = round(mean(std.all),2), 
             BetaSD = round(sd(std.all),2), 
             SEMean = round(mean(std.error),2))
+# stored for later use.
 
 ```
 
 
-Here is our story.
-
-## CFA Results Entire Sample
+# CFA Results Entire Sample
 
 We ran the models for the entire dataset without regard to any classification of the participants (i.e., locale, age group, etc.). The results are as follows:
 
-```{r}
+```{r AllSampleCFA}
 #| echo: true
 #| messages: false
 #| errors: false
@@ -697,6 +706,12 @@ We ran the models for the entire dataset without regard to any classification of
 # New model (3 mv for 4 factors) but all of the data unconditioned by group
 fit.Cur.ALL <- cfa(Cur.model, data=df.fin)
 fit.New.ALL <- cfa(New.model, data=df.fin)
+
+HOF.Cur.model <-  'ds =~ Q1 + Q2 + Q3 + Q4
+                  je =~ Q5 + Q6 + Q7 + Q8
+                  st =~ Q9 + Q10 + Q11 + Q12
+                  op =~ Q13 + Q14 + Q15 + Q16
+                  wpCur =~ ds + je + st + op'
 
 HOF.New.model <- 'ds =~ Q1 + Q3 + Q4
                   je =~ Q6 + Q7 + Q8
@@ -710,17 +725,51 @@ HOF2.New.model <- 'ds =~ Q1 + Q3 + Q4
                   op =~ Q13 + Q14 + Q15
                   Fdsjest =~ ds + je + st'
 
+HOF3.New.model <- 'dim1 =~ Q13 + Q14 + Q15
+                  dim2 =~ Q1 + Q3 + Q4 + Q10 + Q11 + Q12
+                  dim3 =~ Q6 + Q7 + Q8
+                  wpCurRes =~ dim1 + dim2 + dim3'
+
 # fit the higher order factor model - same as the "new" model but with a higher order factor included now
+fit.HOF.cur <- cfa(HOF.Cur.model, data=df.fin)
 fit.HOF.new <- cfa(HOF.New.model, data=df.fin)
 fit.HOF2.new <- cfa(HOF2.New.model, data=df.fin)
+fit.HOF3.new <- cfa(HOF3.New.model, data=df.fin)
+# the last one was based upon the residual analysis of the Rasch model below.  Just testing alternative models.
 
 
-#summary(fit.HOF.new, fit.measures = T, standardized = T) # for checking results
-anova(fit.New.ALL, fit.HOF.new, fit.HOF2.new)
+allModelsFit <- as.data.frame(round(
+  cbind(Cur=fitmeasures(fit.Cur.ALL),
+        CurHOF=fitmeasures(fit.HOF.cur),
+        New=fitmeasures(fit.New.ALL),
+        NewHOF=fitmeasures(fit.HOF.new),
+        NewHOF2=fitmeasures(fit.HOF2.new)),2))
+kable(allModelsFit[c("cfi","tli","rmsea","srmr"),])
+```
 
-library(tidySEM)
-library(DiagrammeRsvg)
-library(rsvg)
+```{r}
+
+```
+
+```{r CurrentVsNewComps}
+```
+
+```{r}
+
+```
+
+```{r CurrentVsNewComps}
+#| echo: true
+#| messages: false
+#| errors: false
+#| warnings: false
+#| include: true
+#| cache: true
+
+
+anova(fit.Cur.ALL,fit.HOF.cur,fit.New.ALL, fit.HOF.new, fit.HOF2.new, fit.HOF3.new)
+
+
 pl1 <- lavaanPlot(fit.New.ALL, coefs=TRUE, stand=TRUE)
 save_png(pl1, "CFA_NewModel.png")
 #embed_plot_pdf(pl1, file = "CFA_NewModel.pdf")
@@ -750,6 +799,48 @@ inner_join(localeLoadings, ageLoadings, by = "term") %>%
   kable(caption = "Average Factor Loadings by Locale, Age Group, and Sex")
 
 ```
+
+
+# RESULTS SECTION - STAGE 2
+
+The results of the CFA models are summarized in the following tables. The first table provides the fit statistics for New and Current models across the entire sample (later) and the MS models. The second table provides the results of the likelihood ratio tests for the constraints.
+
+```{r}
+#| echo: true
+#| messages: false
+#| errors: false
+#| warnings: false
+#| include: true
+#| eval: true
+#| cache: true
+
+# Fit statistics for New and Current models across the entire sample and the MS models
+
+allModelsFit <- as.data.frame(round(
+  cbind(Cur=fitmeasures(fit.Cur.ALL),
+        CurHOF=fitmeasures(fit.HOF.cur),
+        New=fitmeasures(fit.New.ALL),
+        NewHOF=fitmeasures(fit.HOF.new),
+        NewHOF2=fitmeasures(fit.HOF2.new)),2))
+kable(allModelsFit[c("cfi","tli","rmsea","srmr"),])
+
+tabLocale$Facet <- "Locale"
+tabAge$Facet <- "Age"
+tabGender$Facet <- "Sex"
+
+rbind(tabLocale, tabAge, tabGender) %>%
+  # filter only the Model == New
+  filter(Model == "New") %>%
+  # remove the Model column
+  select(-Model) %>%
+  select(Facet, everything()) %>%
+  kable(caption = "Fit Statistics by Facet and Constraint", digits=2)
+
+
+```
+
+
+
 
 # EFA models
 
@@ -1031,6 +1122,24 @@ new.ALL.scores %>%
              fill = Factor)) +
   geom_boxplot() +
   ylim(3,15)
+
+new.ALL.scores %>%
+  pivot_longer(cols = c(ds3sum, je3sum, st3sum, op3sum), 
+               names_to = "Factor", 
+               values_to = "SumScore") %>%
+  # recode Factor to be more descriptive
+  mutate(Factor = recode(Factor, 
+                         ds3sum = "Deprivation Sensitivity", 
+                         je3sum = "Joyous Exploration", 
+                         st3sum = "Stress Tolerance", 
+                         op3sum = "Open to Other")) %>%
+  ggplot(aes(x = Factor, 
+             y = SumScore, 
+             fill = Locale)) +
+  geom_boxplot() +
+  ylim(3,15)
+
+
 ```
 The figure above shows the relative differences by curiosity factor score by locale.  For a closer inspection, let's break out each of the factor scores and compare density plots.
 
@@ -1308,6 +1417,27 @@ new.ALL.scores %>%
   geom_boxplot() +
   ylim(3,15)
 
+new.ALL.scores %>%
+  pivot_longer(cols = c(ds3sum, je3sum, st3sum, op3sum), 
+               names_to = "Factor", 
+               values_to = "SumScore") %>%
+  # recode Factor to be more descriptive
+  mutate(Factor = recode(Factor, 
+                         ds3sum = "Deprivation Sensitivity", 
+                         je3sum = "Joyous Exploration", 
+                         st3sum = "Stress Tolerance", 
+                         op3sum = "Open to Other")) %>%
+  ggplot(aes(x = Factor, 
+             y = SumScore, 
+             fill = Age.Group)) +
+  geom_boxplot() +
+  ylim(3,15)
+
+```
+
+#### Density Plots
+
+```{r DensityPlotsAge}
 # density plots
 new.ALL.scores %>%
   pivot_longer(cols = c(ds,je,st,op), 
@@ -1399,6 +1529,24 @@ new.ALL.scores %>%
              fill = Factor)) +
   geom_boxplot() +
   ylim(3,15)
+
+new.ALL.scores %>%
+  pivot_longer(cols = c(ds3sum, je3sum, st3sum, op3sum), 
+               names_to = "Factor", 
+               values_to = "SumScore") %>%
+  # recode Factor to be more descriptive
+  mutate(Factor = recode(Factor, 
+                         ds3sum = "Deprivation Sensitivity", 
+                         je3sum = "Joyous Exploration", 
+                         st3sum = "Stress Tolerance", 
+                         op3sum = "Open to Other")) %>%
+  ggplot(aes(x = Factor, 
+             y = SumScore, 
+             fill = Gender)) +
+  geom_boxplot() +
+  ylim(3,15)
+
+
 
 # plot density by sex for each factor score
 
