@@ -1743,8 +1743,6 @@ tabStage2 %>%
 #                      group = "Gender")
 ```
 
-# RESUME HERE BELOW...
-
 ## Results: Stage 4
 
 ```{r ResStage4}
