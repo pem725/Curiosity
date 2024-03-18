@@ -99,13 +99,13 @@ apa <- function(x, title = " ") {
 
 ```
 
-:::{.callout-tip}
-The libraries likely need to be updated and run just before we submit to ensure no changes. Once submitted, we freeze the versions and report. Please see the `sessionInfo()` section below.
+:::{.callout-important}
+Please ensure that the libraries listed in the code chunk above are all installed prior to running.  RStudio will likely alert you of any uninstalled packages.  Please see the `sessionInfo()` section below for actual versions used to produce the output.
 :::
 
 # Data {#data}
 
-The Merck data came with a password. Please contact the authors for access to the data. NOTE: The data are not included in the GitHub repository.
+The Merck data came with a password. Please contact the authors for access to the data. NOTE: The data are not included in the GitHub repository.  The data are available upon request from the authors.
 
 ```{r data}
 #| echo: true
@@ -328,9 +328,9 @@ graph TD
 
 Across three types of models:
 
--   **Configural or No Constraints Model:** We tested the configural model to see if the factor structure was the same across the two groups.  
--   **Weak Constraints Model:** We tested the weak constraints model to see if the factor loadings were the same across the two groups.
--   **Strong Constraints Model:** We tested the strong constraints model to see if the factor loadings and intercepts were the same across the two groups.
+-   **Configural Invariance:** We tested the configural model to see if the factor structure was the same across the two groups.  
+-   **Metric Invariance:** We tested the weak constraints model to see if the factor loadings were the same across the two groups.
+-   **Scalar Invariance:** We tested the strong constraints model to see if the factor loadings and intercepts were the same across the two groups.
 
 # Multisample CFA (by Locale)
 
@@ -1750,23 +1750,19 @@ tabLoc$Facet <- "Locale"
 tabAge$Facet <- "Age"
 tabGender$Facet <- "Sex"
 
-tab1Stage3a <- rbind(tabLoc, tabAge, tabGender) %>%
+tabStage3a <- rbind(tabLoc, tabAge, tabGender) %>%
   # filter only the Model == New
   filter(Model == "New") %>%
   # remove the Model column
   select(-Model) %>%
   select(Facet, everything())
 
-tab1Stage3a %>%
+tabStage3a %>%
   apa("Fit Statistics By Facet and Constraint") # uses gt() package - function from above
 
-tab1Stage3a %>%
+tabStage3a %>%
   apa("Fit Statistics By Facet and Constraint") %>%
   gt::gtsave("tabStage3.docx")
-
-tab1Stage3a %>%
-  apa("Fit Statistics By Facet and Constraint") %>%
-  gt::gtsave("tabStage3.png")
 
 
 
@@ -1780,6 +1776,8 @@ tmp <- cfaMSloads %>%
   rename("Locale (SD)" = BetaSD.x,
          "Age (SD)" = BetaSD.y,
          "Sex (SD)" = BetaSD)
+
+
 
 allLoads <- allLoadings %>%
   rename("Beta" = std.all,
@@ -1857,49 +1855,6 @@ sexMC %>%
 # compute Sex differences for the four factors as scored by summing the items for each factor
 
 df.fin %>%
-  select(Locale, ds3sum:op3sum) %>%
-  pivot_longer(cols = ds3sum:op3sum, names_to = "Factor", values_to = "Sum Scores") %>%
-  group_by(Factor, Locale) %>%
-  summarise(Mean = mean(`Sum Scores`, na.rm = T), SD = sd(`Sum Scores`, na.rm = T), .groups = "drop") %>%
-  mutate(across(where(is.numeric), round, 2)) %>%
-  mutate(Factor = recode(Factor, ds3sum = "DS",je3sum = "JE",st3sum = "ST",op3sum = "OP")) %>%
-  gt::gt() %>%
-  gt::gtsave("locDiff.docx")
-
-df.fin %>%
-  select(Locale, ds3sum:op3sum) %>%
-  pivot_longer(cols = ds3sum:op3sum, names_to = "Factor", values_to = "Sum Scores") %>%
-  group_by(Factor, Locale) %>%
-  summarise(Mean = mean(`Sum Scores`, na.rm = T), SD = sd(`Sum Scores`, na.rm = T), .groups = "drop") %>%
-  mutate(across(where(is.numeric), round, 2)) %>%
-  mutate(Factor = recode(Factor, ds3sum = "DS",je3sum = "JE",st3sum = "ST",op3sum = "OP")) %>%
-  gt::gt() %>%
-  gt::gtsave("locDiff.png")
-
-
-df.fin %>%
-  select(Age, ds3sum:op3sum) %>%
-  pivot_longer(cols = ds3sum:op3sum, names_to = "Factor", values_to = "Sum Scores") %>%
-  group_by(Factor, Age) %>%
-  summarise(Mean = mean(`Sum Scores`, na.rm = T), SD = sd(`Sum Scores`, na.rm = T), .groups = "drop") %>%
-  mutate(across(where(is.numeric), round, 2)) %>%
-  mutate(Factor = recode(Factor, ds3sum = "DS",je3sum = "JE",st3sum = "ST",op3sum = "OP")) %>%
-  gt::gt() %>%
-  gt::gtsave("ageDiff.docx")
-
-df.fin %>%
-  select(Age, ds3sum:op3sum) %>%
-  pivot_longer(cols = ds3sum:op3sum, names_to = "Factor", values_to = "Sum Scores") %>%
-  group_by(Factor, Age) %>%
-  summarise(Mean = mean(`Sum Scores`, na.rm = T), SD = sd(`Sum Scores`, na.rm = T), .groups = "drop") %>%
-  mutate(across(where(is.numeric), round, 2)) %>%
-  mutate(Factor = recode(Factor, ds3sum = "DS",je3sum = "JE",st3sum = "ST",op3sum = "OP")) %>%
-  gt::gt() %>%
-  gt::gtsave("ageDiff.png")
-
-
-
-df.fin %>%
   select(Sex, ds3sum:op3sum) %>%
   pivot_longer(cols = ds3sum:op3sum, names_to = "Factor", values_to = "Sum Scores") %>%
   group_by(Factor, Sex) %>%
@@ -1919,7 +1874,7 @@ df.fin %>%
   gt::gt() %>%
   gt::gtsave("sexDiff.png")
 
-#Make the tables for the factors so that readers can read across the table to do the comparisons by factor.
+
 
 
 # run efa on Q25_1:Q25_10
