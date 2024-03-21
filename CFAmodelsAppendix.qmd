@@ -1827,7 +1827,6 @@ df.fin$Age <- as.factor(df.fin$Age.Group)
 df.fin$Sex <- as.factor(df.fin$Gender)
 
 
-
 ageMC <- tbl_merge(tbls = list(lmDS.age, lmJE.age, lmST.age, lmOP.age),
           tab_spanner = c("DS","JE","ST","OP")) %>%
   modify_header(label = "Factor Scores by Age") %>%
