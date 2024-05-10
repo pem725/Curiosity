@@ -23,6 +23,14 @@ format:
   pdf:
     toc: true
     colorlinks: true
+  docx:
+    reference_docx: "apa6.docx"
+    toc: true
+    fig_width: 6
+    fig_height: 4
+    fig_caption: true
+    number_sections: true
+    highlight: tango
 ---
 
 # Setup libraries
