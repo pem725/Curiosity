@@ -257,13 +257,21 @@ efa1.new <- df.fin[,new.vars] %>%
 
 summary(efa1.new)
 efa1.new$loadings
+fa.diagram(efa1.new, simple=F, digits = 2, cut = 0.3, sort=T, main = "EFA (PAF) All Groups Combined")
 
-efa2.new <- psych::omega(df.fin[complete.cases(df.fin[,new.vars]),new.vars], nfactors = 4, poly=T, scores = "regression")
-str(efa2.new)
 
-fa.diagram(efa1, simple=F, digits = 2, cut = 0.3, sort=T, main = "EFA (PAF) All Groups Combined")
+
+
+#efa2.new <- psych::omega(df.fin[complete.cases(df.fin[,new.vars]),new.vars], nfactors = 4, poly=T, scores = "regression")
+#efa2.new$loadings
+#fa.diagram(efa2.new, simple=F, digits = 2, cut = 0.3, sort=T, main = "EFA (PAF) All Groups Combined")
+#str(efa2.new)
+
+
 
 anova(efa2, efa2.new)
 summary(efa2)
 summary(efa2.new)
+
+
 

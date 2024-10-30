@@ -1,0 +1,19 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.docx
+*.csv
+*.xlsx
+*.Rproj
+*.sav
+*.gdlink
+*.gddoc
+Curiosity word clouds.pptx
+*.png
+*.pdf
+*_files/*
+*_cache/*
+*.gdsheet
+*.html
+.quarto/*

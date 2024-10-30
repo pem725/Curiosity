@@ -90,23 +90,6 @@ if (!file.exists("Merck_Curiosity_Survey_Data_NO_PWD.csv")) { # convert xlsx to 
              row.names = TRUE)
 } # convert xlsx to csv END
 
-# # read a xlsx file with a password and save to a data frame
-# df <- xlsx::read.xlsx("Merck Curiosity Survey_Data_PWD.xlsx", sheetIndex = 1, password = "*dke5!rUUnyz2&L")
-# # remove the first row (variable names)
-# df.fin <- df[-1,]
-# # save the variable names
-# df.varnames <- df[1,]
-# 
-# # convert columns 2 through 17 from chr to numeric
-# df.fin[,2:17] <- sapply(df.fin[,2:17], as.numeric)
-# df.fin[,18:38] <- sapply(df.fin[,18:38], as.numeric)
-# 
-# df.fin$Locale <- as.factor(df.fin$Country.of.Subsidiary)
-# 
-# # save df.fin to a csv file
-#write.csv(df.fin, file = "Merck_Curiosity_Survey_Data_NO_PWD.csv", row.names = FALSE)
-#write.csv(df.varnames, file = "Merck_Curiosity_Survey_Data_NO_PWD_varnames.csv", row.names = TRUE)
-
 df.fin <- read.csv("Merck_Curiosity_Survey_Data_NO_PWD.csv", header = TRUE)
 
 # read the variable names

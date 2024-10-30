@@ -23,6 +23,14 @@ format:
   pdf:
     toc: true
     colorlinks: true
+  docx:
+    reference_docx: "apa6.docx"
+    toc: true
+    fig_width: 6
+    fig_height: 4
+    fig_caption: true
+    number_sections: true
+    highlight: tango
 ---
 
 # Setup libraries
@@ -51,7 +59,7 @@ library(ggfortify)
 library(corrplot)
 library(FactoMineR)
 library(factoextra)
-library(tidySEM)
+# library(tidySEM) ## won't install
 library(DiagrammeRsvg)
 library(rsvg)
 library(apaTables)
@@ -99,13 +107,13 @@ apa <- function(x, title = " ") {
 
 ```
 
-:::{.callout-tip}
-The libraries likely need to be updated and run just before we submit to ensure no changes. Once submitted, we freeze the versions and report. Please see the `sessionInfo()` section below.
+:::{.callout-important}
+Please ensure that the libraries listed in the code chunk above are all installed prior to running.  RStudio will likely alert you of any uninstalled packages.  Please see the `sessionInfo()` section below for actual versions used to produce the output.
 :::
 
 # Data {#data}
 
-The Merck data came with a password. Please contact the authors for access to the data. NOTE: The data are not included in the GitHub repository.
+The Merck data came with a password. Please contact the authors for access to the data. NOTE: The data are not included in the GitHub repository.  The data are available upon request from the authors.
 
 ```{r data}
 #| echo: true
@@ -328,9 +336,10 @@ graph TD
 
 Across three types of models:
 
--   **Configural or No Constraints Model:** We tested the configural model to see if the factor structure was the same across the two groups.  
--   **Weak Constraints Model:** We tested the weak constraints model to see if the factor loadings were the same across the two groups.
--   **Strong Constraints Model:** We tested the strong constraints model to see if the factor loadings and intercepts were the same across the two groups.
+-   **Configural Invariance:** We tested the configural model to see if the factor structure was the same across the two groups.  
+-   **Metric Invariance:** We tested the weak constraints model to see if the factor loadings were the same across the two groups.
+-   **Scalar Invariance:** We tested the strong constraints model to see if the factor loadings and intercepts were the same across the two groups.
+
 
 # Multisample CFA (by Locale)
 
@@ -364,13 +373,21 @@ fit.strong.new <- cfa(New.model,
                     data=df.fin, 
                     group="Locale", 
                     group.equal=c("loadings","intercepts"))
+
+lavTestScore(fit.strong.new, standardized = TRUE, epc = TRUE)
+parTable(fit.strong.new)
+#fit.partial.new <- cfa(New.model, 
+#                    data=df.fin, 
+#                    group="Locale", 
+#                    group.equal="loadings"),
+#                    group.partial = c("op", "st"))
 knitr::kable(as.data.frame(table(df.fin$Locale)))
 
 ```
 
 ## Previous vs. New Model (Locale; Fit Statistics)
 
-The table below shows us the fit statistics for the Previous and new models across the three types of models (configural, weak, and strong constraints) by locale.  Our results here indicate several things.  First, the new model consistently outperforms the Previous measurement model.  Every model specifying only 3 indicators for each of the four factors fit well and fit better than the more complicated model with 4 indicators per factor.  Second, the weakly constrained, new model performed best across Locale.  This second point we shall return to after we see the results from the other multisample analyses.  
+The table below shows us the fit statistics for the Previous and new models across the three types of models (configural, metric, and scalar constraints) by locale.  Our results here indicate several things.  First, the new model consistently outperforms the Previous measurement model.  Every model specifying only 3 indicators for each of the four factors fit well and fit better than the more complicated model with 4 indicators per factor.  Second, the metric invariance, new model performed best across Locale.  This second point we shall return to after we see the results from the other multisample analyses.  
 
 ```{r CvsNfitLocale}
 #| echo: true
@@ -447,12 +464,11 @@ kable(lavTestLRT(fit.config.new,
                  fit.weak.new, 
                  fit.strong.new))
 ```
-The new model fits better than the previous model.  The weakly constrained model fits best for both the Previous (old) and new models.  Given the relative fit statistics between models, we hold that the new model is more defensible.  Overall, the fit by CFI (0.978 vs. 0.951) and RMSEA (0.043 vs. 0.055) for the new vs. old, respectively.  These results suggest that the new model is a better fit to the data and, in fact, provide clearer evidence of model fit - at least weakly by constrained factor loadings - for a measurement model that generalizes beyond single samples.
-
+The new model fits better than the previous model; the Metric invariance model fits best for New model.
 
 ## CFA Summary by Locale
 
-The Metric invariance models fit best for both the Previous (old) and new models. Given the relative fit statistics between models, we hold that the new model is more defensible. Overall, the fit by CFI (0.978 vs. 0.951) and RMSEA (0.043 vs. 0.055) for the new vs. old, respectively. These results suggest that the new model is a better fit to the data and, in fact, provide clearer evidence of model fit - at least weakly by constrained factor loadings - for a measurement model that generalizes beyond single samples.
+The Metric invariance models fit best for both the Previous (old) and new models. Given the relative fit statistics between models, we will proceed with the Metric invariance model for the new model.  The table below shows the mean standardized factor loadings across Locale for the new model.  The mean standardized factor loadings are all above .70, which is a good sign.  The standard deviations of the factor loadings are also relatively low, which is also a good sign.  The mean standard error of the factor loadings is also relatively low, which is also a good sign.  These results suggest that the factor loadings are relatively consistent across Locale.
 
 ```{r cfaSummaryLocale}
 #| echo: true
@@ -848,6 +864,14 @@ allLoadings <- tidy(fit.New.ALL) %>%
 allLoadings %>%
   mutate(across(where(is.numeric), round, 2)) %>%
   apa("Factor Loadings for the New Model (Entire Sample)")
+
+allOldLoadings <- tidy(fit.Cur.ALL) %>%
+  filter(str_detect(op, "=~")) %>%
+  select(term, std.all, std.error)
+
+allOldLoadings %>%
+  mutate(across(where(is.numeric), round, 2)) %>%
+  apa("Factor Loadings for the Previous Model (Entire Sample)")
 
 ```
 
@@ -1728,10 +1752,10 @@ The results of the CFA models are summarized in the following tables. The first 
 ## these are now embedded into the document.  Please refer to the final submission.
 
 allModelsFit <- as.data.frame(round(
-  cbind("Previous: Lower"=fitmeasures(fit.Cur.ALL),
-        "Previous: Higher"=fitmeasures(fit.HOF.cur),
-        "New: Lower"=fitmeasures(fit.New.ALL),
-        "New: Higher"=fitmeasures(fit.HOF.new)
+  cbind("Initial: Lower"=fitmeasures(fit.Cur.ALL),
+        "Initial: Higher"=fitmeasures(fit.HOF.cur),
+        "Revised: Lower"=fitmeasures(fit.New.ALL),
+        "Revised: Higher"=fitmeasures(fit.HOF.new)
         ),2))
 kable(allModelsFit[c("cfi","tli","rmsea","srmr"),])
 ```
@@ -1750,23 +1774,19 @@ tabLoc$Facet <- "Locale"
 tabAge$Facet <- "Age"
 tabGender$Facet <- "Sex"
 
-tab1Stage3a <- rbind(tabLoc, tabAge, tabGender) %>%
+tabStage3a <- rbind(tabLoc, tabAge, tabGender) %>%
   # filter only the Model == New
   filter(Model == "New") %>%
   # remove the Model column
   select(-Model) %>%
   select(Facet, everything())
 
-tab1Stage3a %>%
-  apa("Fit Statistics By Facet and Constraint") # uses gt() package - function from above
+tabStage3a %>%
+  apa("Table 1\nFit Statistics By Facet and Constraint") # uses gt() package - function from above
 
-tab1Stage3a %>%
+tabStage3a %>%
   apa("Fit Statistics By Facet and Constraint") %>%
   gt::gtsave("tabStage3.docx")
-
-tab1Stage3a %>%
-  apa("Fit Statistics By Facet and Constraint") %>%
-  gt::gtsave("tabStage3.png")
 
 
 
@@ -1780,6 +1800,8 @@ tmp <- cfaMSloads %>%
   rename("Locale (SD)" = BetaSD.x,
          "Age (SD)" = BetaSD.y,
          "Sex (SD)" = BetaSD)
+
+
 
 allLoads <- allLoadings %>%
   rename("Beta" = std.all,
@@ -1827,6 +1849,7 @@ df.fin$Age <- as.factor(df.fin$Age.Group)
 df.fin$Sex <- as.factor(df.fin$Gender)
 
 
+
 ageMC <- tbl_merge(tbls = list(lmDS.age, lmJE.age, lmST.age, lmOP.age),
           tab_spanner = c("DS","JE","ST","OP")) %>%
   modify_header(label = "Factor Scores by Age") %>%
@@ -1856,49 +1879,6 @@ sexMC %>%
 # compute Sex differences for the four factors as scored by summing the items for each factor
 
 df.fin %>%
-  select(Locale, ds3sum:op3sum) %>%
-  pivot_longer(cols = ds3sum:op3sum, names_to = "Factor", values_to = "Sum Scores") %>%
-  group_by(Factor, Locale) %>%
-  summarise(Mean = mean(`Sum Scores`, na.rm = T), SD = sd(`Sum Scores`, na.rm = T), .groups = "drop") %>%
-  mutate(across(where(is.numeric), round, 2)) %>%
-  mutate(Factor = recode(Factor, ds3sum = "DS",je3sum = "JE",st3sum = "ST",op3sum = "OP")) %>%
-  gt::gt() %>%
-  gt::gtsave("locDiff.docx")
-
-df.fin %>%
-  select(Locale, ds3sum:op3sum) %>%
-  pivot_longer(cols = ds3sum:op3sum, names_to = "Factor", values_to = "Sum Scores") %>%
-  group_by(Factor, Locale) %>%
-  summarise(Mean = mean(`Sum Scores`, na.rm = T), SD = sd(`Sum Scores`, na.rm = T), .groups = "drop") %>%
-  mutate(across(where(is.numeric), round, 2)) %>%
-  mutate(Factor = recode(Factor, ds3sum = "DS",je3sum = "JE",st3sum = "ST",op3sum = "OP")) %>%
-  gt::gt() %>%
-  gt::gtsave("locDiff.png")
-
-
-df.fin %>%
-  select(Age, ds3sum:op3sum) %>%
-  pivot_longer(cols = ds3sum:op3sum, names_to = "Factor", values_to = "Sum Scores") %>%
-  group_by(Factor, Age) %>%
-  summarise(Mean = mean(`Sum Scores`, na.rm = T), SD = sd(`Sum Scores`, na.rm = T), .groups = "drop") %>%
-  mutate(across(where(is.numeric), round, 2)) %>%
-  mutate(Factor = recode(Factor, ds3sum = "DS",je3sum = "JE",st3sum = "ST",op3sum = "OP")) %>%
-  gt::gt() %>%
-  gt::gtsave("ageDiff.docx")
-
-df.fin %>%
-  select(Age, ds3sum:op3sum) %>%
-  pivot_longer(cols = ds3sum:op3sum, names_to = "Factor", values_to = "Sum Scores") %>%
-  group_by(Factor, Age) %>%
-  summarise(Mean = mean(`Sum Scores`, na.rm = T), SD = sd(`Sum Scores`, na.rm = T), .groups = "drop") %>%
-  mutate(across(where(is.numeric), round, 2)) %>%
-  mutate(Factor = recode(Factor, ds3sum = "DS",je3sum = "JE",st3sum = "ST",op3sum = "OP")) %>%
-  gt::gt() %>%
-  gt::gtsave("ageDiff.png")
-
-
-
-df.fin %>%
   select(Sex, ds3sum:op3sum) %>%
   pivot_longer(cols = ds3sum:op3sum, names_to = "Factor", values_to = "Sum Scores") %>%
   group_by(Factor, Sex) %>%
@@ -1918,7 +1898,7 @@ df.fin %>%
   gt::gt() %>%
   gt::gtsave("sexDiff.png")
 
-#Make the tables for the factors so that readers can read across the table to do the comparisons by factor.
+
 
 
 # run efa on Q25_1:Q25_10
